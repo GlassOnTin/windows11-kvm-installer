@@ -7,7 +7,20 @@ set -e  # Exit on error
 
 echo "=== Windows 11 VM Setup Script ==="
 
-# Step 1: Check for Windows 11 ISO
+# Step 1: Check if running with sudo and recommend against it
+if [ "$EUID" -eq 0 ]; then
+    echo "Warning: Running with sudo can cause permission issues."
+    echo "Recommended: Run this script without sudo."
+    echo ""
+    echo "Continue anyway? (y/n)"
+    read -p "Choice: " continue_choice
+    if [ "$continue_choice" != "y" ]; then
+        echo "Exiting. Please run without sudo: ./setup-windows11-vm.sh"
+        exit 0
+    fi
+fi
+
+# Step 2: Check for Windows 11 ISO
 ISO_PATH="/media/ian/Ventoy/Win11_24H2_EnglishInternational_x64.iso"
 if [ ! -f "$ISO_PATH" ]; then
     echo "Error: Windows 11 ISO not found at $ISO_PATH"
@@ -16,7 +29,7 @@ if [ ! -f "$ISO_PATH" ]; then
 fi
 echo "✓ Windows 11 ISO found"
 
-# Step 2: Update system and install KVM/QEMU packages
+# Step 3: Update system and install KVM/QEMU packages
 echo "Installing KVM/QEMU packages..."
 sudo apt update
 sudo apt install -y \
@@ -33,19 +46,20 @@ sudo apt install -y \
 
 echo "✓ KVM/QEMU packages installed"
 
-# Step 3: Add current user to necessary groups
+# Step 4: Add current user to necessary groups
+ACTUAL_USER=${SUDO_USER:-$USER}
 echo "Adding user to kvm and libvirt groups..."
-sudo usermod -a -G kvm $USER
-sudo usermod -a -G libvirt $USER
+sudo usermod -a -G kvm $ACTUAL_USER
+sudo usermod -a -G libvirt $ACTUAL_USER
 echo "✓ User added to groups (logout/login required for changes to take effect)"
 
-# Step 4: Start and enable libvirt service
+# Step 5: Start and enable libvirt service
 echo "Starting libvirt service..."
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 echo "✓ Libvirt service started"
 
-# Step 5: Create VM directory
+# Step 6: Create VM directory
 # Use the actual user's home directory when run with sudo
 REAL_USER=${SUDO_USER:-$USER}
 VM_DIR="/home/$REAL_USER/VMs"
@@ -158,6 +172,7 @@ fi
 echo "Note: Using SATA disk interface to ensure Windows can see the disk"
 
 # Build the virt-install command
+# Note: Using existing disk instead of letting virt-install create it to avoid permission issues
 VIRT_INSTALL_CMD="virt-install \
     --connect qemu:///session \
     --name=$VM_NAME \
@@ -165,7 +180,7 @@ VIRT_INSTALL_CMD="virt-install \
     --ram=8192 \
     --vcpus=4 \
     --cpu host-passthrough \
-    --disk path=$DISK_PATH,size=60,bus=sata,format=qcow2 \
+    --disk path=$DISK_PATH,bus=sata,format=qcow2 \
     --cdrom=$ISO_PATH \
     --network user \
     --graphics vnc \
