@@ -8,7 +8,7 @@ set -e  # Exit on error
 echo "=== Windows 11 VM Setup Script ==="
 
 # Step 1: Check for Windows 11 ISO
-ISO_PATH="/mnt/usb/Win11_24H2_EnglishInternational_x64.iso"
+ISO_PATH="/media/ian/Ventoy/Win11_24H2_EnglishInternational_x64.iso"
 if [ ! -f "$ISO_PATH" ]; then
     echo "Error: Windows 11 ISO not found at $ISO_PATH"
     echo "Please mount your USB drive containing the Windows 11 ISO"
@@ -63,7 +63,7 @@ echo "✓ Disk image created"
 VIRTIO_ISO="$VM_DIR/virtio-win.iso"
 if [ ! -f "$VIRTIO_ISO" ]; then
     echo "Downloading VirtIO drivers (optional)..."
-    wget -q https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso -O "$VIRTIO_ISO" || {
+    wget --progress=bar:force:noscroll https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso -O "$VIRTIO_ISO" || {
         echo "Warning: Could not download VirtIO drivers. Continuing without them."
         VIRTIO_ISO=""
     }
