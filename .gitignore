@@ -1,0 +1,16 @@
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# VM disk images
+*.qcow2
+*.img
+*.iso
+
+# Log files
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db
