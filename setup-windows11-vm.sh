@@ -88,13 +88,13 @@ echo "Note: Using SATA disk interface to ensure Windows can see the disk"
 # Build the virt-install command
 VIRT_INSTALL_CMD="virt-install \
     --connect qemu:///session \
-    --name=\"$VM_NAME\" \
+    --name=$VM_NAME \
     --os-variant=win11 \
     --ram=8192 \
     --vcpus=4 \
     --cpu host-passthrough \
-    --disk path=\"$DISK_PATH\",size=60,bus=sata,format=qcow2 \
-    --cdrom=\"$ISO_PATH\" \
+    --disk path=$DISK_PATH,size=60,bus=sata,format=qcow2 \
+    --cdrom=$ISO_PATH \
     --network user \
     --graphics vnc \
     --video qxl \
@@ -106,16 +106,16 @@ VIRT_INSTALL_CMD="virt-install \
 # Add VirtIO drivers ISO if available
 if [ -n "$VIRTIO_ISO" ] && [ -f "$VIRTIO_ISO" ]; then
     echo "VirtIO drivers available - adding as secondary CD"
-    VIRT_INSTALL_CMD="$VIRT_INSTALL_CMD --disk \"$VIRTIO_ISO\",device=cdrom,bus=sata"
+    VIRT_INSTALL_CMD="$VIRT_INSTALL_CMD --disk $VIRTIO_ISO,device=cdrom,bus=sata"
 fi
 
 # Execute the command as the actual user
 if [ "$EUID" -eq 0 ]; then
     # Running as root, switch to actual user
-    sudo -u "$REAL_USER" $VIRT_INSTALL_CMD
+    sudo -u "$REAL_USER" bash -c "$VIRT_INSTALL_CMD"
 else
     # Running as regular user
-    eval $VIRT_INSTALL_CMD
+    bash -c "$VIRT_INSTALL_CMD"
 fi
 
 echo "✓ VM created and started"
