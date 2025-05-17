@@ -63,6 +63,8 @@ echo "Creating 60GB disk image..."
 qemu-img create -f qcow2 "$DISK_PATH" 60G
 # Ensure proper ownership of the disk image
 chown "$REAL_USER:$REAL_USER" "$DISK_PATH"
+# Make sure the disk is readable by libvirt-qemu user
+chmod 644 "$DISK_PATH"
 echo "✓ Disk image created"
 
 # Step 7: Download VirtIO drivers (optional but recommended)
@@ -107,8 +109,14 @@ if [ -n "$VIRTIO_ISO" ] && [ -f "$VIRTIO_ISO" ]; then
     VIRT_INSTALL_CMD="$VIRT_INSTALL_CMD --disk \"$VIRTIO_ISO\",device=cdrom,bus=sata"
 fi
 
-# Execute the command
-eval $VIRT_INSTALL_CMD
+# Execute the command as the actual user
+if [ "$EUID" -eq 0 ]; then
+    # Running as root, switch to actual user
+    sudo -u "$REAL_USER" $VIRT_INSTALL_CMD
+else
+    # Running as regular user
+    eval $VIRT_INSTALL_CMD
+fi
 
 echo "✓ VM created and started"
 
