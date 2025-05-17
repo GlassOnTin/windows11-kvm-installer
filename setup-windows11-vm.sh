@@ -106,20 +106,26 @@ if [ "$VM_EXISTS" -gt 0 ]; then
             # Running as root, delete as actual user
             sudo -u "$REAL_USER" virsh --connect qemu:///session destroy "$VM_NAME" 2>/dev/null || true
             sleep 1
+            # Remove any managed save state
+            sudo -u "$REAL_USER" virsh --connect qemu:///session managedsave-remove "$VM_NAME" 2>/dev/null || true
+            # Now undefine the VM
             sudo -u "$REAL_USER" virsh --connect qemu:///session undefine "$VM_NAME" --nvram 2>/dev/null || true
             # Double check and try alternative deletion methods
             if sudo -u "$REAL_USER" virsh --connect qemu:///session list --all | grep -q "$VM_NAME"; then
                 echo "Trying alternative deletion method..."
-                sudo -u "$REAL_USER" virsh --connect qemu:///session undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
+                sudo -u "$REAL_USER" virsh --connect qemu:///session undefine "$VM_NAME" --remove-all-storage --nvram 2>/dev/null || true
             fi
         else
             virsh --connect qemu:///session destroy "$VM_NAME" 2>/dev/null || true
             sleep 1
+            # Remove any managed save state
+            virsh --connect qemu:///session managedsave-remove "$VM_NAME" 2>/dev/null || true
+            # Now undefine the VM
             virsh --connect qemu:///session undefine "$VM_NAME" --nvram 2>/dev/null || true
             # Double check and try alternative deletion methods
             if virsh --connect qemu:///session list --all | grep -q "$VM_NAME"; then
                 echo "Trying alternative deletion method..."
-                virsh --connect qemu:///session undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
+                virsh --connect qemu:///session undefine "$VM_NAME" --remove-all-storage --nvram 2>/dev/null || true
             fi
         fi
         
