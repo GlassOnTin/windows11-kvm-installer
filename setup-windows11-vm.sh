@@ -46,17 +46,23 @@ sudo systemctl enable libvirtd
 echo "✓ Libvirt service started"
 
 # Step 5: Create VM directory
-VM_DIR="$HOME/VMs"
+# Use the actual user's home directory when run with sudo
+REAL_USER=${SUDO_USER:-$USER}
+VM_DIR="/home/$REAL_USER/VMs"
 VM_NAME="Windows11"
 DISK_PATH="$VM_DIR/win11.qcow2"
 
 echo "Creating VM directory..."
 mkdir -p "$VM_DIR"
+# Ensure proper ownership
+chown "$REAL_USER:$REAL_USER" "$VM_DIR"
 echo "✓ VM directory created"
 
 # Step 6: Create disk image
 echo "Creating 60GB disk image..."
 qemu-img create -f qcow2 "$DISK_PATH" 60G
+# Ensure proper ownership of the disk image
+chown "$REAL_USER:$REAL_USER" "$DISK_PATH"
 echo "✓ Disk image created"
 
 # Step 7: Download VirtIO drivers (optional but recommended)
@@ -67,6 +73,10 @@ if [ ! -f "$VIRTIO_ISO" ]; then
         echo "Warning: Could not download VirtIO drivers. Continuing without them."
         VIRTIO_ISO=""
     }
+    # Ensure proper ownership if download succeeded
+    if [ -f "$VIRTIO_ISO" ]; then
+        chown "$REAL_USER:$REAL_USER" "$VIRTIO_ISO"
+    fi
 fi
 
 # Step 8: Create Windows 11 VM
