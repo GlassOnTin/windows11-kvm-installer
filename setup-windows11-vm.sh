@@ -85,7 +85,15 @@ fi
 echo "Creating Windows 11 VM..."
 
 # Check if VM already exists
-if virsh --connect qemu:///session list --all | grep -q "$VM_NAME"; then
+VM_CHECK_CMD="virsh --connect qemu:///session list --all"
+if [ "$EUID" -eq 0 ]; then
+    # Running as root, check as actual user
+    VM_EXISTS=$(sudo -u "$REAL_USER" $VM_CHECK_CMD | grep -c "$VM_NAME" || true)
+else
+    VM_EXISTS=$($VM_CHECK_CMD | grep -c "$VM_NAME" || true)
+fi
+
+if [ "$VM_EXISTS" -gt 0 ]; then
     echo "Warning: VM '$VM_NAME' already exists!"
     echo "Options:"
     echo "1. Delete existing VM and create new one"
@@ -94,8 +102,14 @@ if virsh --connect qemu:///session list --all | grep -q "$VM_NAME"; then
     
     if [ "$choice" = "1" ]; then
         echo "Deleting existing VM..."
-        virsh --connect qemu:///session destroy "$VM_NAME" 2>/dev/null || true
-        virsh --connect qemu:///session undefine "$VM_NAME" --nvram 2>/dev/null || true
+        if [ "$EUID" -eq 0 ]; then
+            # Running as root, delete as actual user
+            sudo -u "$REAL_USER" virsh --connect qemu:///session destroy "$VM_NAME" 2>/dev/null || true
+            sudo -u "$REAL_USER" virsh --connect qemu:///session undefine "$VM_NAME" --nvram 2>/dev/null || true
+        else
+            virsh --connect qemu:///session destroy "$VM_NAME" 2>/dev/null || true
+            virsh --connect qemu:///session undefine "$VM_NAME" --nvram 2>/dev/null || true
+        fi
         echo "✓ Existing VM deleted"
     else
         echo "Keeping existing VM. Exiting..."
