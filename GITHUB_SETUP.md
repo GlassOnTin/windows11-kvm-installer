@@ -5,7 +5,7 @@ Follow these steps to push this repository to GitHub:
 ## 1. Create a new repository on GitHub
 
 1. Go to https://github.com/new
-2. Name it: `windows11-kvm-setup` (or your preferred name)
+2. Name it: `windows11-kvm-installer` (or your preferred name)
 3. Description: "Automated setup scripts for Windows 11 VM using KVM/QEMU"
 4. Keep it public or private as desired
 5. **DO NOT** initialize with README, .gitignore, or license (we already have these)
@@ -16,7 +16,7 @@ Follow these steps to push this repository to GitHub:
 After creating the empty repository, run these commands:
 
 ```bash
-cd /home/ian/scripts
+cd /home/ian/windows11-kvm-installer
 
 # Add GitHub remote (replace YOUR_REPO_NAME with actual repo name)
 git remote add origin git@github.com:GlassOnTin/YOUR_REPO_NAME.git
@@ -33,16 +33,16 @@ git push -u origin main
 If you have GitHub CLI installed:
 
 ```bash
-cd /home/ian/scripts
+cd /home/ian/windows11-kvm-installer
 
 # Create repo and push in one command
-gh repo create GlassOnTin/windows11-kvm-setup --public --source=. --remote=origin --push
+gh repo create GlassOnTin/windows11-kvm-installer --public --source=. --remote=origin --push
 ```
 
 ## 4. Verify
 
 After pushing, your repository will be available at:
-https://github.com/GlassOnTin/windows11-kvm-setup
+https://github.com/GlassOnTin/windows11-kvm-installer
 
 ## Repository Contents
 
@@ -50,6 +50,7 @@ https://github.com/GlassOnTin/windows11-kvm-setup
 - `troubleshoot-vm.sh` - Diagnostic helper script
 - `README.md` - Comprehensive documentation
 - `.gitignore` - Excludes VM disk images and temp files
+- `fix-disk-visibility.sh` - Troubleshooting script for disk issues
 
 ## Future Updates
 
