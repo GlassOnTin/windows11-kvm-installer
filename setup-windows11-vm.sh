@@ -83,6 +83,26 @@ fi
 
 # Step 8: Create Windows 11 VM
 echo "Creating Windows 11 VM..."
+
+# Check if VM already exists
+if virsh --connect qemu:///session list --all | grep -q "$VM_NAME"; then
+    echo "Warning: VM '$VM_NAME' already exists!"
+    echo "Options:"
+    echo "1. Delete existing VM and create new one"
+    echo "2. Exit (keep existing VM)"
+    read -p "Choose option (1 or 2): " choice
+    
+    if [ "$choice" = "1" ]; then
+        echo "Deleting existing VM..."
+        virsh --connect qemu:///session destroy "$VM_NAME" 2>/dev/null || true
+        virsh --connect qemu:///session undefine "$VM_NAME" --nvram 2>/dev/null || true
+        echo "✓ Existing VM deleted"
+    else
+        echo "Keeping existing VM. Exiting..."
+        exit 0
+    fi
+fi
+
 echo "Note: Using SATA disk interface to ensure Windows can see the disk"
 
 # Build the virt-install command
