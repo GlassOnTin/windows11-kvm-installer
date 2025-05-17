@@ -91,8 +91,19 @@ virsh --connect qemu:///session undefine Windows11 --nvram
 - Check VNC display: `virsh --connect qemu:///session vncdisplay Windows11`
 
 ### Disk Not Visible During Installation
-- The script uses SATA interface which should be compatible
-- If issues persist, you may need to load storage drivers during Windows setup
+**This is the most common issue!** Here's how to fix it:
+
+1. **Check disk configuration**: The script uses SATA interface by default, which Windows should recognize
+2. **Verify disk exists**: Run `virsh --connect qemu:///session domblklist Windows11`
+3. **During Windows setup**: 
+   - If no disk is visible, click "Load driver"
+   - If VirtIO drivers were downloaded, browse to the secondary CD drive (usually D:)
+   - Look for the appropriate driver folder (e.g., `viostor\w11\amd64`)
+   - Select the driver and continue
+4. **Alternative approaches**:
+   - Use IDE instead of SATA: Edit the script to use `bus=ide`
+   - Pre-format the disk: Use `qemu-img create -f qcow2 -o preallocation=full`
+   - Check UEFI settings in the VM for disk controller options
 
 ### Permission Denied Errors
 - Ensure you've logged out and back in after group changes
