@@ -59,6 +59,8 @@ After running the script, you need to log out and log back in for group membersh
 
 ### VM Management
 
+### Basic Operations
+
 List all VMs:
 ```bash
 virsh --connect qemu:///session list --all
@@ -83,6 +85,54 @@ Delete VM:
 ```bash
 virsh --connect qemu:///session undefine Windows11 --nvram
 ```
+
+### Management Script
+Use the included management script for easy VM control:
+```bash
+./manage-vm.sh
+```
+
+## Folder Sharing
+
+Share your Linux home folder with the Windows VM using one of these methods:
+
+### Method 1: VirtIO-FS (Recommended - Best Performance)
+**Prerequisites**: Install VirtIO-FS drivers in Windows first
+
+```bash
+./setup-virtiofs.sh
+```
+
+This creates a high-performance shared folder using VirtIO-FS:
+- Automatically starts virtiofsd daemon via systemd
+- Your /home/ian folder appears as a drive in Windows
+- Best performance for file operations
+
+### Method 2: SMB Sharing (Easiest - No Drivers Needed)
+```bash
+./enable-smb-sharing.sh
+```
+
+Access from Windows:
+- Open File Explorer
+- Type `\\10.0.2.4\qemu` in the address bar
+- Your Linux home folder is accessible immediately
+
+### Method 3: 9P Filesystem (Legacy)
+```bash
+./enable-folder-sharing.sh
+```
+
+Choose option 2 for 9P filesystem sharing. Requires special Windows drivers.
+
+## USB Device Support
+
+Enable USB passthrough to use USB devices in the VM:
+```bash
+./add-usb-support.sh
+```
+
+This converts the VM to use SPICE graphics and enables USB redirection.
 
 ## Troubleshooting
 
