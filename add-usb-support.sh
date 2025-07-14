@@ -131,7 +131,7 @@ if ! grep -q "redirdev" "$TMP_XML"; then
 fi
 
 # Add SPICE agent channel if it doesn't exist
-if ! grep -q "spicevmc.*vdagent" "$TMP_XML"; then
+if ! grep -q "com.redhat.spice.0" "$TMP_XML"; then
     echo "Adding SPICE agent channel..."
     sed -i '/<\/devices>/i \    <channel type="spicevmc">\
       <target type="virtio" name="com.redhat.spice.0"/>\
@@ -143,6 +143,34 @@ echo "Applying new configuration..."
 if virsh --connect qemu:///session define "$TMP_XML"; then
     echo -e "${GREEN}VM configuration updated successfully!${NC}"
     rm -f "$TMP_XML"
+    
+    # Check for and fix any duplicate SPICE channels that libvirt might have created
+    echo "Checking for duplicate SPICE channels..."
+    CURRENT_XML="/tmp/${VM_NAME}-current.xml"
+    virsh --connect qemu:///session dumpxml "$VM_NAME" > "$CURRENT_XML"
+    
+    # Count SPICE channels with the same name
+    SPICE_COUNT=$(grep -c "com.redhat.spice.0" "$CURRENT_XML" || true)
+    
+    if [ "$SPICE_COUNT" -gt 1 ]; then
+        echo "Found duplicate SPICE channels, fixing..."
+        # Remove duplicate SPICE channel (keeping only the first one)
+        sed '/<channel type=.spicevmc.>/{
+            N
+            /<target type=.virtio. name=.com.redhat.spice.0.\/>/!b
+            N
+            /<address type=.virtio-serial. controller=.0. bus=.0. port=.3.\/>/!b
+            N
+            /<\/channel>/!b
+            d
+        }' "$CURRENT_XML" > "${CURRENT_XML}.fixed"
+        
+        virsh --connect qemu:///session define "${CURRENT_XML}.fixed"
+        echo "Duplicate SPICE channels removed"
+        rm -f "${CURRENT_XML}.fixed"
+    fi
+    
+    rm -f "$CURRENT_XML"
 else
     echo -e "${RED}Failed to update VM configuration${NC}"
     echo "Backup saved as: $VM_NAME-backup-$(date +%Y%m%d-%H%M%S).xml"
